@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd evo2_frontend && npm run build",
-  "outputDirectory": "evo2_frontend/.next",
-  "installCommand": "cd evo2_frontend && npm install"
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next"
 }
