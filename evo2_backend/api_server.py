@@ -265,30 +265,61 @@ async def mint_nft(request: NFTMintingRequest, background_tasks: BackgroundTasks
             detail=f"Analysis quality score ({analysis.quality_score.overall_score}) below minting threshold (60)"
         )
     
-    # Use blockchain integration for actual NFT minting
+    # Use blockchain integration for actual NFT minting with rewards
     try:
-        from blockchain import process_nft_minting_with_blockchain
+        from blockchain import process_nft_minting_with_rewards, BlockchainIntegration
         
-        # Execute minting synchronously to get the results
-        minting_result = await process_nft_minting_with_blockchain(
-            analysis.model_dump(), 
-            request.contributor_address
-        )
+        # Initialize blockchain client with private key from environment
+        private_key = os.getenv("BLOCKCHAIN_PRIVATE_KEY")
+        if not private_key:
+            logger.warning("No private key configured - using basic minting without rewards")
+            from blockchain import process_nft_minting_with_blockchain
+            minting_result = await process_nft_minting_with_blockchain(
+                analysis.model_dump(), 
+                request.contributor_address
+            )
+        else:
+            # Use enhanced minting with automatic rewards
+            blockchain_client = BlockchainIntegration(private_key)
+            minting_result = await process_nft_minting_with_rewards(
+                analysis.model_dump(), 
+                request.contributor_address,
+                blockchain_client
+            )
+        
+        # Calculate total rewards earned
+        rewards_info = minting_result.get("rewards", {})
+        total_tokens = rewards_info.get("total_tokens_earned", 0)
+        analysis_reward = rewards_info.get("analysis_reward", {}).get("reward_amount", 0)
+        mint_reward = rewards_info.get("mint_reward", {}).get("reward_amount", 0)
+        quality_bonus = rewards_info.get("analysis_reward", {}).get("quality_bonus", 0)
         
         return {
-            "message": "NFT minted successfully",
+            "message": "NFT minted successfully with automated rewards",
             "analysis_id": request.analysis_id,
             "quality_score": analysis.quality_score.overall_score,
             "contributor_address": request.contributor_address,
-            "reward_amount": f"{100 + (analysis.quality_score.overall_score * 0.5):.0f} GENOME tokens",
-            "contract_address": "0x2181B366B730628F97c44C17de19949e5359682C",
-            "nft_token_id": str(minting_result.get("token_id", "")),
-            "transaction_hash": minting_result.get("transaction_hash", ""),
-            "ipfs_hash": minting_result.get("ipfs_uri", "").replace("ipfs://", ""),
-            "metadata_url": minting_result.get("ipfs_uri", ""),
+            "rewards": {
+                "analysis_reward": analysis_reward,
+                "mint_reward": mint_reward,
+                "quality_bonus": quality_bonus,
+                "total_tokens_earned": total_tokens,
+                "reward_transactions": {
+                    "analysis_tx": rewards_info.get("analysis_reward", {}).get("transaction_hash"),
+                    "mint_tx": rewards_info.get("mint_reward", {}).get("transaction_hash")
+                }
+            },
+            "nft_details": {
+                "contract_address": "0x2181B366B730628F97c44C17de19949e5359682C",
+                "token_id": str(minting_result.get("token_id", "")),
+                "transaction_hash": minting_result.get("transaction_hash", ""),
+                "ipfs_hash": minting_result.get("ipfs_uri", "").replace("ipfs://", ""),
+                "metadata_url": minting_result.get("ipfs_uri", ""),
+                "gas_used": minting_result.get("gas_used")
+            },
             "minter_address": request.contributor_address,
             "timestamp": datetime.utcnow().isoformat(),
-            "gas_used": minting_result.get("gas_used")
+            "platform": "BNB Smart Chain Testnet"
         }
     except ImportError as e:
         # Fallback response if blockchain module can't be imported
