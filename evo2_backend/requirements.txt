@@ -1,6 +1,39 @@
+# AI/ML model integration
 modal 
 matplotlib 
 pandas 
 seaborn 
 scikit-learn 
 openpyxl
+
+# Core API framework
+fastapi[standard]>=0.104.1
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+
+# HTTP client for external APIs
+httpx>=0.25.2
+python-multipart>=0.0.6
+
+# Blockchain integration  
+web3>=6.11.3
+eth-account>=0.9.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# Database integration
+redis>=5.0.1
+sqlalchemy>=2.0.23
+psycopg2-binary>=2.9.9
+
+# IPFS integration
+ipfshttpclient>=0.8.0a2
+
+# Additional utilities
+typing-extensions>=4.8.0
+pydantic-settings>=2.1.0
+
+# Development tools
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
