@@ -7,6 +7,7 @@
     "test": "hardhat test",
     "test:coverage": "hardhat coverage",
     "deploy:testnet": "hardhat run scripts/deploy-full-platform.js --network bnbTestnet",
+    "deploy:simple": "hardhat run scripts/deploy-simple.js --network bnbTestnet",
     "deploy:local": "hardhat run scripts/deploy-full-platform.js --network localhost",
     "verify": "hardhat verify --network bnbTestnet",
     "node": "hardhat node",

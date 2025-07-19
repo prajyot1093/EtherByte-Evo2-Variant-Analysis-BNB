@@ -82,11 +82,11 @@ async function main() {
   const daoFunding = ethers.parseEther("10000000"); // 10M tokens
   await genomeToken.transfer(await genomeDAO.getAddress(), daoFunding);
 
-  // Send some BNB to DAO for funding
+  // Send some BNB to DAO for funding (reduced amount)
   console.log("Funding DAO treasury with BNB...");
   await deployer.sendTransaction({
     to: await genomeDAO.getAddress(),
-    value: ethers.parseEther("1.0") // 1 BNB
+    value: ethers.parseEther("0.1") // Reduced to 0.1 BNB
   });
 
   console.log("\n✅ All contracts deployed and configured successfully!");

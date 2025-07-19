@@ -1,0 +1,18 @@
+{
+  "network": "bnb-testnet",
+  "chainId": 97,
+  "deployer": "0xeE0d4d193085B4d739256d5eC81aE113716e9f39",
+  "contracts": {
+    "genomeToken": "0x0C5f98e281cB3562a2EEDF3EE63D3b623De98b15",
+    "genomeNFT": "0x2181B366B730628F97c44C17de19949e5359682C",
+    "genomeMarketplace": "0xd80bE0DDCA595fFf35bF44A7d2D4E312b05A1576",
+    "genomeDAO": "0x8FEbF8eA03E8e54846a7B82f7F6146bAE17bd3f4"
+  },
+  "deployedAt": "2025-07-19T11:01:00.247Z",
+  "explorerUrls": {
+    "genomeToken": "https://testnet.bscscan.com/address/0x0C5f98e281cB3562a2EEDF3EE63D3b623De98b15",
+    "genomeNFT": "https://testnet.bscscan.com/address/0x2181B366B730628F97c44C17de19949e5359682C",
+    "genomeMarketplace": "https://testnet.bscscan.com/address/0xd80bE0DDCA595fFf35bF44A7d2D4E312b05A1576",
+    "genomeDAO": "https://testnet.bscscan.com/address/0x8FEbF8eA03E8e54846a7B82f7F6146bAE17bd3f4"
+  }
+}
