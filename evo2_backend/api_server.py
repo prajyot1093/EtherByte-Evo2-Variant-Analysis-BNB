@@ -7,7 +7,7 @@ import os
 import asyncio
 import logging
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 
@@ -75,7 +75,7 @@ class AnalysisResult(BaseModel):
     gene_annotations: Dict[str, Any] = Field(default_factory=dict)
     analysis_metadata: Dict[str, Any] = Field(default_factory=dict)
     processing_time: float = Field(..., description="Processing time in seconds")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ready_for_minting: bool = Field(..., description="Whether result is ready for NFT minting")
 
 class NFTMintingRequest(BaseModel):
@@ -88,7 +88,7 @@ analysis_results: Dict[str, AnalysisResult] = {}
 
 def generate_analysis_id(sequence: str, gene_name: str = None) -> str:
     """Generate unique analysis ID"""
-    content = f"{sequence}_{gene_name}_{datetime.utcnow().isoformat()}"
+    content = f"{sequence}_{gene_name}_{datetime.now(timezone.utc).isoformat()}"
     return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 def calculate_sequence_hash(sequence: str) -> str:
@@ -146,7 +146,7 @@ async def root():
         "message": "Evo2 Genomic Analysis API",
         "status": "operational",
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 @app.get("/health")
@@ -158,7 +158,7 @@ async def health_check():
             "modal_com": "connected",
             "evo2_model": "ready"
         },
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 @app.post("/api/analyze", response_model=AnalysisResult)
@@ -173,7 +173,7 @@ async def analyze_sequence(request: SequenceAnalysisRequest, background_tasks: B
     4. Returns analysis results
     5. Prepares data for potential NFT minting
     """
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     
     try:
         # Generate unique analysis ID
@@ -195,7 +195,7 @@ async def analyze_sequence(request: SequenceAnalysisRequest, background_tasks: B
             raise HTTPException(status_code=500, detail="AI analysis processing failed")
         
         # Calculate processing time
-        processing_time = (datetime.utcnow() - start_time).total_seconds()
+        processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
         
         # Create quality score object
         quality_score = QualityScore(**modal_result["quality_score"])
@@ -270,7 +270,7 @@ async def mint_nft(request: NFTMintingRequest, background_tasks: BackgroundTasks
         from blockchain import process_nft_minting_with_rewards, BlockchainIntegration
         
         # Initialize blockchain client with private key from environment
-        private_key = os.getenv("BLOCKCHAIN_PRIVATE_KEY")
+        private_key = os.getenv("PRIVATE_KEY")
         if not private_key:
             logger.warning("No private key configured - using basic minting without rewards")
             from blockchain import process_nft_minting_with_blockchain
@@ -318,7 +318,7 @@ async def mint_nft(request: NFTMintingRequest, background_tasks: BackgroundTasks
                 "gas_used": minting_result.get("gas_used")
             },
             "minter_address": request.contributor_address,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "platform": "BNB Smart Chain Testnet"
         }
     except ImportError as e:

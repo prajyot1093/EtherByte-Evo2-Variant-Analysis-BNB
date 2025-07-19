@@ -324,28 +324,28 @@ export function SequenceAnalysisComponent() {
               <div>
                 <Label>Token ID</Label>
                 <div className="font-mono text-sm bg-gray-100 p-2 rounded">
-                  {mintResult.nft_token_id}
+                  {mintResult.nft_details?.token_id || 'N/A'}
                 </div>
               </div>
 
               <div>
                 <Label>Transaction Hash</Label>
                 <div className="font-mono text-sm bg-gray-100 p-2 rounded truncate">
-                  {mintResult.transaction_hash}
+                  {mintResult.nft_details?.transaction_hash || 'N/A'}
                 </div>
               </div>
 
               <div>
                 <Label>IPFS Hash</Label>
                 <div className="font-mono text-sm bg-gray-100 p-2 rounded truncate">
-                  {mintResult.ipfs_hash}
+                  {mintResult.nft_details?.ipfs_hash || 'N/A'}
                 </div>
               </div>
 
               <div>
                 <Label>Reward Amount</Label>
                 <div className="text-lg font-semibold text-green-600">
-                  {mintResult.reward_amount}
+                  {mintResult.rewards?.total_rewards || '0'} GENOME
                 </div>
               </div>
             </div>
@@ -355,9 +355,9 @@ export function SequenceAnalysisComponent() {
                 onClick={(e) => {
                   e.preventDefault();
                   // Ensure transaction hash has 0x prefix
-                  const txHash = mintResult.transaction_hash.startsWith('0x') 
-                    ? mintResult.transaction_hash 
-                    : `0x${mintResult.transaction_hash}`;
+                  const txHash = mintResult.nft_details?.transaction_hash && mintResult.nft_details.transaction_hash.startsWith('0x') 
+                    ? mintResult.nft_details.transaction_hash 
+                    : `0x${mintResult.nft_details?.transaction_hash || ''}`;
                   const url = `https://testnet.bscscan.com/tx/${txHash}`;
                   console.log('Opening BscScan URL:', url);
                   // Use a more reliable method to open the URL
@@ -378,9 +378,9 @@ export function SequenceAnalysisComponent() {
               <Button
                 onClick={async () => {
                   // Ensure transaction hash has 0x prefix
-                  const txHash = mintResult.transaction_hash.startsWith('0x') 
-                    ? mintResult.transaction_hash 
-                    : `0x${mintResult.transaction_hash}`;
+                  const txHash = mintResult.nft_details?.transaction_hash && mintResult.nft_details.transaction_hash.startsWith('0x') 
+                    ? mintResult.nft_details.transaction_hash 
+                    : `0x${mintResult.nft_details?.transaction_hash || ''}`;
                   const url = `https://testnet.bscscan.com/tx/${txHash}`;
                   try {
                     await navigator.clipboard.writeText(url);

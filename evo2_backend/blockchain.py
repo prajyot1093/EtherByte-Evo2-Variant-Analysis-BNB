@@ -76,6 +76,16 @@ class BlockchainIntegration:
                 "outputs": [{"name": "", "type": "uint256"}],
                 "stateMutability": "nonpayable",
                 "type": "function"
+            },
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "name": "from", "type": "address"},
+                    {"indexed": True, "name": "to", "type": "address"},
+                    {"indexed": True, "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "Transfer",
+                "type": "event"
             }
         ]
         
@@ -86,6 +96,16 @@ class BlockchainIntegration:
                 "name": "balanceOf",
                 "outputs": [{"name": "", "type": "uint256"}],
                 "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"name": "to", "type": "address"},
+                    {"name": "amount", "type": "uint256"}
+                ],
+                "name": "transfer",
+                "outputs": [{"name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
                 "type": "function"
             }
         ]
@@ -477,7 +497,7 @@ async def process_nft_minting_with_rewards(
         
         # First, mint the NFT (existing process)
         mint_result = await process_nft_minting_with_blockchain(
-            analysis_result, contributor_address, blockchain_client
+            analysis_result, contributor_address
         )
         
         if mint_result["minting_successful"]:
