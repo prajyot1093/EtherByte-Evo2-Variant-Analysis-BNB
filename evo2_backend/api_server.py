@@ -13,7 +13,7 @@ import json
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import httpx
 import modal
 
@@ -49,7 +49,8 @@ class SequenceAnalysisRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=500, description="Analysis description")
     contributor_address: Optional[str] = Field(None, pattern=r"^0x[a-fA-F0-9]{40}$", description="Ethereum wallet address")
 
-    @validator('sequence')
+    @field_validator('sequence')
+    @classmethod
     def validate_sequence(cls, v):
         # Basic DNA sequence validation
         valid_chars = set('ATCGNRYSWKMBDHV-')
@@ -293,4 +294,4 @@ async def process_nft_minting(analysis: AnalysisResult, contributor_address: str
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

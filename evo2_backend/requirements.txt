@@ -13,6 +13,7 @@ pydantic>=2.5.0
 
 # HTTP client for external APIs
 httpx>=0.25.2
+aiohttp>=3.9.0
 python-multipart>=0.0.6
 
 # Blockchain integration  

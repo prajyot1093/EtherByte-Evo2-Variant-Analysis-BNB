@@ -7,8 +7,6 @@ import { env } from '../env'
 
 export interface SequenceAnalysisRequest {
   sequence: string
-  sequence_type: 'DNA' | 'RNA' | 'PROTEIN'
-  analysis_type: 'variant_analysis' | 'gene_annotation' | 'pathway_analysis'
   gene_name?: string
   description?: string
   contributor_address?: string
@@ -114,6 +112,9 @@ class ApiClient {
       ...options.headers,
     }
 
+    console.log('Making API request to:', url)
+    console.log('Request body:', options.body)
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -122,6 +123,7 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        console.error('API Error Response:', errorData)
         throw new Error(
           `API Error ${response.status}: ${errorData.detail || response.statusText}`
         )

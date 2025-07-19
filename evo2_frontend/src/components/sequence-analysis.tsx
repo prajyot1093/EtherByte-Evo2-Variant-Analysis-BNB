@@ -33,8 +33,6 @@ export function SequenceAnalysisComponent() {
   
   const [formData, setFormData] = useState<Partial<SequenceAnalysisRequest>>({
     sequence: '',
-    sequence_type: 'DNA',
-    analysis_type: 'variant_analysis',
     gene_name: '',
     description: '',
   })
@@ -50,10 +48,13 @@ export function SequenceAnalysisComponent() {
   }
 
   const handleAnalyzeSequence = async () => {
-    if (!formData.sequence || formData.sequence.length < 4) {
-      setError('Please enter a valid sequence (minimum 4 characters)')
+    if (!formData.sequence || formData.sequence.length < 10) {
+      setError('Please enter a valid sequence (minimum 10 characters)')
       return
     }
+
+    console.log('Wallet connected:', isConnected)
+    console.log('Wallet address:', address)
 
     setIsAnalyzing(true)
     setError(null)
@@ -62,14 +63,18 @@ export function SequenceAnalysisComponent() {
     try {
       const request: SequenceAnalysisRequest = {
         sequence: formData.sequence!,
-        sequence_type: formData.sequence_type as 'DNA' | 'RNA' | 'PROTEIN',
-        analysis_type: formData.analysis_type as 'variant_analysis' | 'gene_annotation' | 'pathway_analysis',
         gene_name: formData.gene_name || undefined,
         description: formData.description || undefined,
-        contributor_address: address,
+        contributor_address: address || undefined,
       }
 
-      const result = await analyzeSequence(request)
+      // Remove undefined values to send clean request
+      const cleanRequest = Object.fromEntries(
+        Object.entries(request).filter(([_, value]) => value !== undefined)
+      ) as SequenceAnalysisRequest
+
+      console.log('Sending request:', JSON.stringify(cleanRequest, null, 2))
+      const result = await analyzeSequence(cleanRequest)
       setAnalysisResult(result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed')
@@ -123,49 +128,39 @@ export function SequenceAnalysisComponent() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="sequence">DNA/RNA/Protein Sequence</Label>
+            <Label htmlFor="sequence">DNA Sequence</Label>
             <Textarea
               id="sequence"
-              placeholder="Enter your sequence (e.g., ATCGATCGATCG...)"
+              placeholder="Enter your DNA sequence (minimum 10 characters, e.g., ATCGATCGATCGATCGATCG...)"
               value={formData.sequence}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange('sequence', e.target.value)}
               className="min-h-[100px] font-mono"
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Sequence Type</Label>
-              <Select
-                value={formData.sequence_type}
-                onValueChange={(value) => handleInputChange('sequence_type', value)}
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFormData(prev => ({ 
+                  ...prev, 
+                  sequence: 'ATCGATCGATCGATCGATCGATCGATCGATCGATCG',
+                  gene_name: 'BRCA1' 
+                }))}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DNA">DNA</SelectItem>
-                  <SelectItem value="RNA">RNA</SelectItem>
-                  <SelectItem value="PROTEIN">Protein</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Analysis Type</Label>
-              <Select
-                value={formData.analysis_type}
-                onValueChange={(value) => handleInputChange('analysis_type', value)}
+                Insert BRCA1 Test Sequence
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFormData(prev => ({ 
+                  ...prev, 
+                  sequence: 'GCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGC',
+                  gene_name: 'TP53' 
+                }))}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="variant_analysis">Variant Analysis</SelectItem>
-                  <SelectItem value="gene_annotation">Gene Annotation</SelectItem>
-                  <SelectItem value="pathway_analysis">Pathway Analysis</SelectItem>
-                </SelectContent>
-              </Select>
+                Insert TP53 Test Sequence
+              </Button>
             </div>
           </div>
 
