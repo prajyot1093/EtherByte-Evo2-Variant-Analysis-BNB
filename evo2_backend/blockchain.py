@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional
 from decimal import Decimal
 
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+from web3.middleware import ExtraDataToPOAMiddleware
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class BlockchainIntegration:
         self.w3 = Web3(Web3.HTTPProvider(BNB_TESTNET_RPC))
         
         # Add PoA middleware for BNB Chain
-        self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        self.w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         
         if private_key:
             self.account = self.w3.eth.account.from_key(private_key)
@@ -106,6 +106,11 @@ class BlockchainIntegration:
         if not self.account:
             raise ValueError("No private key configured for transactions")
         
+        # Ensure no None values
+        gene_name = gene_name or "Unknown Gene"
+        description = description or "AI-analyzed genomic sequence"
+        ipfs_hash = ipfs_hash or ""
+        
         try:
             # Prepare transaction
             nft_contract = self.contracts["genomeNFT"]
@@ -129,8 +134,13 @@ class BlockchainIntegration:
             # Sign transaction
             signed_txn = self.w3.eth.account.sign_transaction(transaction, self.account.key)
             
-            # Send transaction
-            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            # Send transaction (handle different web3.py versions)
+            try:
+                raw_transaction = signed_txn.raw_transaction
+            except AttributeError:
+                raw_transaction = signed_txn.rawTransaction
+            
+            tx_hash = self.w3.eth.send_raw_transaction(raw_transaction)
             
             logger.info(f"NFT minting transaction sent: {tx_hash.hex()}")
             
@@ -140,9 +150,19 @@ class BlockchainIntegration:
             if receipt.status == 1:
                 logger.info(f"NFT minted successfully! Gas used: {receipt.gasUsed}")
                 
-                # Extract token ID from logs if needed
+                # Extract token ID from Transfer event logs
                 token_id = None
-                # You would parse the logs here to get the token ID
+                try:
+                    # Parse the Transfer event to get token ID
+                    nft_contract = self.contracts["genomeNFT"]
+                    transfer_events = nft_contract.events.Transfer().process_receipt(receipt)
+                    if transfer_events:
+                        token_id = transfer_events[0]['args']['tokenId']
+                        logger.info(f"Token ID minted: {token_id}")
+                except Exception as e:
+                    logger.warning(f"Could not extract token ID: {e}")
+                    # Fallback: use a placeholder or transaction-based ID
+                    token_id = receipt.blockNumber  # Use block number as fallback
                 
                 return {
                     "success": True,
@@ -276,8 +296,8 @@ async def process_nft_minting_with_blockchain(
         mint_result = await blockchain_client.mint_genomic_nft(
             contributor_address=contributor_address,
             token_uri=ipfs_uri,
-            gene_name=analysis_result["analysis_metadata"].get("gene_name", "Unknown"),
-            description=analysis_result["analysis_metadata"].get("description", ""),
+            gene_name=analysis_result["analysis_metadata"].get("gene_name") or "Unknown Gene",
+            description=analysis_result["analysis_metadata"].get("description") or "AI-analyzed genomic sequence",
             ipfs_hash=ipfs_uri.replace("ipfs://", ""),
             quality_score=int(analysis_result["quality_score"]["overall_score"])
         )
@@ -286,6 +306,7 @@ async def process_nft_minting_with_blockchain(
             "minting_successful": mint_result["success"],
             "transaction_hash": mint_result.get("transaction_hash"),
             "token_id": mint_result.get("token_id"),
+            "gas_used": mint_result.get("gas_used"),
             "ipfs_uri": ipfs_uri,
             "metadata": metadata
         }

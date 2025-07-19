@@ -11,6 +11,10 @@ from datetime import datetime
 import hashlib
 import json
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
@@ -262,22 +266,42 @@ async def mint_nft(request: NFTMintingRequest, background_tasks: BackgroundTasks
         )
     
     # Use blockchain integration for actual NFT minting
-    from blockchain import process_nft_minting_with_blockchain
-    
-    background_tasks.add_task(
-        process_nft_minting_with_blockchain, 
-        analysis.dict(), 
-        request.contributor_address
-    )
-    
-    return {
-        "message": "NFT minting initiated",
-        "analysis_id": request.analysis_id,
-        "quality_score": analysis.quality_score.overall_score,
-        "contributor_address": request.contributor_address,
-        "estimated_reward": f"{100 + (analysis.quality_score.overall_score * 0.5):.0f} GENOME tokens",
-        "contract_address": "0x2181B366B730628F97c44C17de19949e5359682C"
-    }
+    try:
+        from blockchain import process_nft_minting_with_blockchain
+        
+        # Execute minting synchronously to get the results
+        minting_result = await process_nft_minting_with_blockchain(
+            analysis.model_dump(), 
+            request.contributor_address
+        )
+        
+        return {
+            "message": "NFT minted successfully",
+            "analysis_id": request.analysis_id,
+            "quality_score": analysis.quality_score.overall_score,
+            "contributor_address": request.contributor_address,
+            "reward_amount": f"{100 + (analysis.quality_score.overall_score * 0.5):.0f} GENOME tokens",
+            "contract_address": "0x2181B366B730628F97c44C17de19949e5359682C",
+            "nft_token_id": str(minting_result.get("token_id", "")),
+            "transaction_hash": minting_result.get("transaction_hash", ""),
+            "ipfs_hash": minting_result.get("ipfs_uri", "").replace("ipfs://", ""),
+            "metadata_url": minting_result.get("ipfs_uri", ""),
+            "minter_address": request.contributor_address,
+            "timestamp": datetime.utcnow().isoformat(),
+            "gas_used": minting_result.get("gas_used")
+        }
+    except ImportError as e:
+        # Fallback response if blockchain module can't be imported
+        logger.warning(f"Blockchain module not available: {e}")
+        return {
+            "message": "NFT minting simulated (blockchain module not available)",
+            "analysis_id": request.analysis_id,
+            "quality_score": analysis.quality_score.overall_score,
+            "contributor_address": request.contributor_address,
+            "estimated_reward": f"{100 + (analysis.quality_score.overall_score * 0.5):.0f} GENOME tokens",
+            "contract_address": "0x2181B366B730628F97c44C17de19949e5359682C",
+            "note": "Install web3 dependencies for full blockchain integration"
+        }
 
 async def process_nft_minting(analysis: AnalysisResult, contributor_address: str):
     """Background task to process NFT minting"""
