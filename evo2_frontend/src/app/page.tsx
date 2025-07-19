@@ -10,6 +10,7 @@ import { WalletConnectionHeader } from "../components/wallet-connection-header";
 import { SequenceAnalysisComponent } from "../components/sequence-analysis";
 import GeneViewer from "../components/gene-viewer";
 import { Dna, Search, Database, Coins, FileText } from "lucide-react";
+import Link from "next/link";
 import {
   getAvailableGenomes,
   getGenomeChromosomes,
@@ -33,9 +34,6 @@ export default function HomePage() {
   const [mode, setMode] = useState<Mode>("search");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Blockchain features state
-  const [showBlockchainFeatures, setShowBlockchainFeatures] = useState(false);
 
   useEffect(() => {
     const fetchGenomes = async () => {
@@ -146,15 +144,16 @@ export default function HomePage() {
                 </h1>
               </div>
               <div className="flex items-center gap-4">
-                <Button
-                  variant={showBlockchainFeatures ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowBlockchainFeatures(!showBlockchainFeatures)}
-                  className="flex items-center gap-2"
-                >
-                  <Coins className="h-4 w-4" />
-                  {showBlockchainFeatures ? "Hide" : "Show"} Blockchain Features
-                </Button>
+                <Link href="/blockchain">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Coins className="h-4 w-4" />
+                    Blockchain Features
+                  </Button>
+                </Link>
                 <WalletConnectionHeader />
               </div>
             </div>
@@ -167,23 +166,6 @@ export default function HomePage() {
             genomeId={selectedGenome}
             onClose={() => setSelectedGene(null)}
           />
-          
-          {/* Blockchain Features Section */}
-          {showBlockchainFeatures && (
-            <div className="mt-8 space-y-6">
-              <Card className="bg-white border-2 border-blue-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-800">
-                    <Coins className="h-5 w-5" />
-                    Blockchain Features - Mint NFT & Earn Rewards
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SequenceAnalysisComponent />
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </main>
       </div>
     );
@@ -202,15 +184,16 @@ export default function HomePage() {
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <Button
-                variant={showBlockchainFeatures ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowBlockchainFeatures(!showBlockchainFeatures)}
-                className="flex items-center gap-2"
-              >
-                <Coins className="h-4 w-4" />
-                {showBlockchainFeatures ? "Hide" : "Show"} Blockchain Features
-              </Button>
+              <Link href="/blockchain">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Coins className="h-4 w-4" />
+                  Blockchain Features
+                </Button>
+              </Link>
               <WalletConnectionHeader />
             </div>
           </div>
@@ -425,21 +408,6 @@ export default function HomePage() {
                   )}
                 </TabsContent>
               </Tabs>
-
-              {/* Blockchain Features Toggle */}
-              {showBlockchainFeatures && (
-                <Card className="bg-blue-50 border-2 border-blue-200">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-800">
-                      <Coins className="h-5 w-5" />
-                      Blockchain Features - Mint NFT & Earn Rewards
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SequenceAnalysisComponent />
-                  </CardContent>
-                </Card>
-              )}
 
               {isLoading && (
                 <div className="flex justify-center py-8">
