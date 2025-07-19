@@ -5,6 +5,7 @@ Connects the AI API with deployed BNB Chain smart contracts
 import os
 import json
 import logging
+import asyncio
 from typing import Dict, Any, Optional, Tuple
 from decimal import Decimal
 from datetime import datetime
@@ -46,13 +47,28 @@ class BlockchainIntegration:
         
         if private_key:
             self.account = self.w3.eth.account.from_key(private_key)
+            # Track nonce to prevent conflicts
+            self._nonce = None
         else:
             self.account = None
+            self._nonce = None
             
         # Load contract ABIs (you'll need to add these)
         self.contracts = self._load_contracts()
         
         logger.info(f"Connected to BNB Chain, latest block: {self.w3.eth.block_number}")
+    
+    def get_next_nonce(self):
+        """Get the next nonce for transactions, handling concurrent requests"""
+        if not self.account:
+            return 0
+            
+        if self._nonce is None:
+            self._nonce = self.w3.eth.get_transaction_count(self.account.address)
+        else:
+            self._nonce += 1
+            
+        return self._nonce
     
     def _load_contracts(self) -> Dict[str, Any]:
         """Load contract instances with ABIs"""
@@ -157,7 +173,7 @@ class BlockchainIntegration:
                 'from': self.account.address,
                 'gas': 300000,
                 'gasPrice': self.w3.eth.gas_price,
-                'nonce': self.w3.eth.get_transaction_count(self.account.address),
+                'nonce': self.get_next_nonce(),
                 'chainId': CHAIN_ID
             })
             
@@ -455,7 +471,7 @@ class RewardSystem:
                 'from': self.blockchain.account.address,
                 'gas': 100000,
                 'gasPrice': self.blockchain.w3.eth.gas_price,
-                'nonce': self.blockchain.w3.eth.get_transaction_count(self.blockchain.account.address),
+                'nonce': self.blockchain.get_next_nonce(),
                 'chainId': CHAIN_ID
             })
             
@@ -506,6 +522,9 @@ async def process_nft_minting_with_rewards(
                 contributor_address, 
                 analysis_result["quality_score"]["overall_score"]
             )
+            
+            # Small delay to prevent nonce conflicts
+            await asyncio.sleep(1)
             
             # Distribute NFT minting reward
             mint_reward = await reward_system.distribute_nft_mint_reward(contributor_address)

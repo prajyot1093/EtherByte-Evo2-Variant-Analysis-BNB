@@ -345,7 +345,7 @@ export function SequenceAnalysisComponent() {
               <div>
                 <Label>Reward Amount</Label>
                 <div className="text-lg font-semibold text-green-600">
-                  {mintResult.rewards?.total_rewards || '0'} GENOME
+                  {mintResult.rewards?.total_tokens_earned || '0'} GENOME
                 </div>
               </div>
             </div>
