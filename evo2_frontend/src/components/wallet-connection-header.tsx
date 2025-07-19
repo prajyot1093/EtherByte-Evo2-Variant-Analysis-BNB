@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi'
+import { useAccount, useDisconnect, useBalance } from 'wagmi'
+import { useWeb3Modal } from '@web3modal/wagmi/react'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { Wallet, LogOut, ChevronDown } from 'lucide-react'
@@ -15,8 +16,8 @@ import {
 
 export function WalletConnectionHeader() {
   const { address, isConnected, chain } = useAccount()
-  const { connect, connectors, isPending } = useConnect()
   const { disconnect } = useDisconnect()
+  const { open } = useWeb3Modal()
   
   // Get BNB balance
   const { data: bnbBalance } = useBalance({
@@ -31,18 +32,14 @@ export function WalletConnectionHeader() {
   if (!isConnected) {
     return (
       <div className="flex items-center gap-2">
-        {connectors.map((connector) => (
-          <Button
-            key={connector.uid}
-            onClick={() => connect({ connector })}
-            disabled={isPending}
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Wallet className="h-4 w-4" />
-            Connect Wallet
-          </Button>
-        ))}
+        <Button
+          onClick={() => open()}
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Wallet className="h-4 w-4" />
+          Connect Wallet
+        </Button>
       </div>
     )
   }
