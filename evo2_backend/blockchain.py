@@ -63,8 +63,11 @@ class BlockchainIntegration:
         if not self.account:
             return 0
             
-        if self._nonce is None:
-            self._nonce = self.w3.eth.get_transaction_count(self.account.address)
+        # Always get fresh nonce from network to ensure accuracy
+        current_nonce = self.w3.eth.get_transaction_count(self.account.address)
+        
+        if self._nonce is None or current_nonce > self._nonce:
+            self._nonce = current_nonce
         else:
             self._nonce += 1
             

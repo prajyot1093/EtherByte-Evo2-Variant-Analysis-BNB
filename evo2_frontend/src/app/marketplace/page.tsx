@@ -35,9 +35,18 @@ export default function MarketplacePage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOwned, setFilterOwned] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
 
   useEffect(() => {
     loadMarketplaceData();
+    
+    // Check if list action parameter is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'list' && isConnected) {
+      setShowListModal(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/marketplace');
+    }
   }, [isConnected, address]);
 
   const loadMarketplaceData = async () => {

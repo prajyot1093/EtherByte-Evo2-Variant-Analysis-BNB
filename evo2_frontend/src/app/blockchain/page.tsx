@@ -58,6 +58,76 @@ export default function BlockchainFeaturesPage() {
     }
   };
 
+  const handleClaimRewards = async () => {
+    if (!isConnected || !address) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      // Call the backend API to claim pending rewards
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/claim-rewards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet_address: address
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Successfully claimed ${result.total_claimed} GENOME tokens!`);
+        // Refresh user data
+        loadUserBlockchainData();
+      } else {
+        alert(`No pending rewards to claim: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error claiming rewards:', error);
+      alert('Error claiming rewards. Please try again.');
+    }
+  };
+
+  const handleListNFT = async () => {
+    if (!isConnected || !address) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    if (userStats.nftsOwned === 0) {
+      alert('You need to own NFTs to list them on the marketplace');
+      return;
+    }
+
+    // For now, redirect to marketplace with list mode
+    // In a full implementation, this would open a modal to select NFT and set price
+    window.location.href = '/marketplace?action=list';
+  };
+
+  const handleViewAnalytics = () => {
+    // Create a simple analytics modal or redirect to detailed analytics page
+    alert(`📊 Platform Analytics Details:
+
+🔬 Your Contributions:
+• Analyses Completed: ${userStats.contributions}
+• NFTs Minted: ${userStats.nftsOwned}
+• Voting Power: ${userStats.votingPower} votes
+
+🌍 Platform Statistics:
+• Total Analyses: 1,247
+• Total NFTs: 856
+• Active Users: 342
+• Total Rewards Distributed: 2.1M GENOME
+
+🏆 Your Impact:
+• Data Quality Score: 95%
+• Community Rank: Top 15%
+• Platform Participation: ${userStats.contributions > 0 ? '75%' : '0%'}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -207,7 +277,12 @@ export default function BlockchainFeaturesPage() {
                     <Badge variant="default">{userStats.genomeTokens} GENOME</Badge>
                   </div>
                 </div>
-                <Button className="w-full" variant="outline" disabled={!isConnected}>
+                <Button 
+                  className="w-full" 
+                  variant="outline" 
+                  disabled={!isConnected}
+                  onClick={handleClaimRewards}
+                >
                   {isConnected ? "Claim Available Rewards" : "Connect Wallet to Claim"}
                 </Button>
               </CardContent>
@@ -240,7 +315,12 @@ export default function BlockchainFeaturesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" disabled={!isConnected}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={!isConnected || userStats.nftsOwned === 0}
+                    onClick={handleListNFT}
+                  >
                     List NFT
                   </Button>
                   <Link href="/marketplace">
@@ -279,9 +359,11 @@ export default function BlockchainFeaturesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" disabled={!isConnected}>
-                    Create Proposal
-                  </Button>
+                  <Link href="/dao?create=true">
+                    <Button variant="outline" size="sm" className="w-full" disabled={!isConnected}>
+                      Create Proposal
+                    </Button>
+                  </Link>
                   <Link href="/dao">
                     <Button variant="outline" size="sm" className="w-full">
                       Vote on Proposals
@@ -317,7 +399,11 @@ export default function BlockchainFeaturesPage() {
                     <span className="font-semibold">342</span>
                   </div>
                 </div>
-                <Button className="w-full" variant="outline">
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={handleViewAnalytics}
+                >
                   View Details
                 </Button>
               </CardContent>

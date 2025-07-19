@@ -347,6 +347,80 @@ async def process_nft_minting(analysis: AnalysisResult, contributor_address: str
     await asyncio.sleep(5)  # Simulate blockchain transaction time
     logger.info(f"NFT minting completed for {contributor_address}")
 
+class ClaimRewardsRequest(BaseModel):
+    wallet_address: str = Field(..., description="Wallet address to claim rewards for")
+
+@app.post("/api/claim-rewards")
+async def claim_pending_rewards(request: ClaimRewardsRequest):
+    """
+    Claim any pending rewards for a wallet address
+    """
+    try:
+        logger.info(f"Processing reward claim for {request.wallet_address}")
+        
+        # Import blockchain integration
+        from blockchain import BlockchainIntegration, RewardSystem
+        
+        # Initialize blockchain client
+        blockchain_client = BlockchainIntegration()
+        reward_system = RewardSystem(blockchain_client)
+        
+        # Check for pending rewards (this would typically check a database)
+        # For now, we'll simulate some pending rewards
+        pending_analysis_rewards = 0  # Would query from database
+        pending_validation_rewards = 15  # Example: user has validation rewards pending
+        total_pending = pending_analysis_rewards + pending_validation_rewards
+        
+        if total_pending == 0:
+            return {
+                "success": False,
+                "message": "No pending rewards to claim",
+                "total_claimed": 0
+            }
+        
+        # Distribute the pending rewards
+        if pending_validation_rewards > 0:
+            result = await reward_system._distribute_tokens(
+                request.wallet_address, 
+                pending_validation_rewards, 
+                "manual_claim"
+            )
+            
+            if result.get("success"):
+                logger.info(f"Successfully claimed {total_pending} GENOME tokens for {request.wallet_address}")
+                return {
+                    "success": True,
+                    "message": f"Successfully claimed rewards",
+                    "total_claimed": total_pending,
+                    "transaction_hash": result.get("transaction_hash"),
+                    "breakdown": {
+                        "validation_rewards": pending_validation_rewards,
+                        "analysis_rewards": pending_analysis_rewards
+                    }
+                }
+            else:
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"Failed to distribute rewards: {result.get('error', 'Unknown error')}"
+                )
+        
+        return {
+            "success": False,
+            "message": "No valid rewards to process",
+            "total_claimed": 0
+        }
+        
+    except ImportError as e:
+        logger.warning(f"Blockchain module not available: {e}")
+        return {
+            "success": False,
+            "message": "Blockchain integration not available",
+            "total_claimed": 0
+        }
+    except Exception as e:
+        logger.error(f"Error claiming rewards: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error claiming rewards: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)

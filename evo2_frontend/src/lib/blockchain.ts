@@ -61,7 +61,7 @@ export const MARKETPLACE_ABI = parseAbi([
 ]);
 
 export const DAO_ABI = parseAbi([
-  'function createProposal(string title, string description, string ipfsHash, uint256 fundingAmount, uint256 genomeTokenAmount, uint8 proposalType)',
+  'function propose(string title, string description, string ipfsHash, uint256 fundingAmount, uint256 genomeTokenAmount, uint8 proposalType) returns (uint256)',
   'function vote(uint256 proposalId, uint8 choice, string reason)',
   'function executeProposal(uint256 proposalId)',
   'function cancelProposal(uint256 proposalId)',
@@ -69,6 +69,7 @@ export const DAO_ABI = parseAbi([
   'function proposals(uint256 proposalId) view returns (uint256 id, address proposer, string title, string description, string ipfsHash, uint256 fundingAmount, uint256 genomeTokenAmount, uint256 votingStart, uint256 votingEnd, uint256 executionTime, uint256 forVotes, uint256 againstVotes, uint256 abstainVotes, bool executed, bool canceled, uint8 proposalType)',
   'function proposalVotes(uint256 proposalId, address voter) view returns (address voter, uint8 choice, uint256 weight, string reason)',
   'function getUserProposals(address user) view returns (uint256[])',
+  'function getVotingPower(address account) view returns (uint256)',
   'event ProposalCreated(uint256 indexed proposalId, address indexed proposer, string title, uint256 fundingAmount, uint256 votingStart, uint256 votingEnd)',
   'event VoteCast(uint256 indexed proposalId, address indexed voter, uint8 choice, uint256 weight, string reason)'
 ]);
@@ -311,20 +312,29 @@ export const createDAOProposal = async (
   if (!CONTRACTS.DAO) return null;
   
   try {
+    // Check user's GENOME token balance first
+    const userBalance = await getUserTokenBalance(account);
+    const requiredBalance = 10000; // 10,000 GENOME tokens required
+    
+    if (userBalance < requiredBalance) {
+      throw new Error(`Insufficient GENOME tokens. Required: ${requiredBalance}, You have: ${userBalance}`);
+    }
+    
     const fundingInWei = BigInt(Math.floor(fundingAmount * Math.pow(10, 18)));
     const tokenAmountInWei = BigInt(Math.floor(genomeTokenAmount * Math.pow(10, 18)));
     
     const hash = await walletClient.writeContract({
       address: CONTRACTS.DAO as `0x${string}`,
       abi: DAO_ABI,
-      functionName: 'createProposal',
+      functionName: 'propose',
       args: [title, description, ipfsHash, fundingInWei, tokenAmountInWei, proposalType],
-      account: account as `0x${string}`
+      account: account as `0x${string}`,
+      gas: BigInt(500000) // Set explicit gas limit
     });
     return hash;
   } catch (error) {
     console.error('Error creating proposal:', error);
-    return null;
+    throw error; // Re-throw to show specific error message
   }
 };
 

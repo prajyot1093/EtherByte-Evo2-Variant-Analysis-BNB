@@ -41,6 +41,14 @@ export default function DAOPage() {
 
   useEffect(() => {
     loadDAOData();
+    
+    // Check if create parameter is in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('create') === 'true') {
+      setShowCreateModal(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/dao');
+    }
   }, [isConnected, address]);
 
   const loadDAOData = async () => {
@@ -115,9 +123,9 @@ export default function DAOPage() {
         const mockProposals: Proposal[] = [
           {
             id: "demo1",
-            title: "Increase NFT Minting Rewards",
-            description: "Proposal to increase GENOME token rewards for NFT minting from 5 to 10 tokens to incentivize more genomic data contributions.",
-            proposer: "0x1234...5678",
+            title: "🔮 Demo: Increase NFT Minting Rewards",
+            description: "This is a demo proposal to show the DAO interface. Proposal to increase GENOME token rewards for NFT minting from 5 to 10 tokens to incentivize more genomic data contributions. Connect your wallet and create real proposals for actual governance.",
+            proposer: "Demo Account",
             status: "active",
             votesFor: 127,
             votesAgainst: 43,
@@ -168,10 +176,23 @@ export default function DAOPage() {
       
       console.log(`Voting ${vote} on proposal ${proposalId}`);
       
+      // Check if this is a demo proposal
+      if (proposalId.startsWith('demo')) {
+        alert('This is a demo proposal. Connect to real blockchain for actual voting.');
+        return;
+      }
+      
+      // Validate proposal ID is numeric
+      const numericProposalId = parseInt(proposalId);
+      if (isNaN(numericProposalId)) {
+        alert('Invalid proposal ID');
+        return;
+      }
+      
       const hash = await voteOnProposal(
         walletClient,
         address!,
-        parseInt(proposalId),
+        numericProposalId,
         choice,
         reason
       );
@@ -241,28 +262,46 @@ export default function DAOPage() {
       
       console.log('Creating proposal:', newProposal);
       
-      const hash = await createDAOProposal(
-        walletClient,
-        address!,
-        newProposal.title,
-        newProposal.description,
-        "", // ipfsHash - TODO: upload to IPFS for detailed proposals
-        0, // fundingAmount - TODO: add funding field to UI
-        0, // genomeTokenAmount - TODO: add token amount field to UI
-        proposalType
-      );
-      
-      if (hash) {
-        alert(`Proposal created successfully! Transaction hash: ${hash}`);
-        setShowCreateModal(false);
-        setNewProposal({ title: '', description: '', category: 'platform' });
+      try {
+        const hash = await createDAOProposal(
+          walletClient,
+          address!,
+          newProposal.title,
+          newProposal.description,
+          "", // ipfsHash - TODO: upload to IPFS for detailed proposals
+          0, // fundingAmount - TODO: add funding field to UI
+          0, // genomeTokenAmount - TODO: add token amount field to UI
+          proposalType
+        );
         
-        // Reload DAO data to show new proposal
-        setTimeout(() => {
-          loadDAOData();
-        }, 3000);
-      } else {
-        alert('Proposal creation failed. Please try again.');
+        if (hash) {
+          alert(`Proposal created successfully! Transaction hash: ${hash}`);
+          setShowCreateModal(false);
+          setNewProposal({ title: '', description: '', category: 'platform' });
+          
+          // Reload DAO data to show new proposal
+          setTimeout(() => {
+            loadDAOData();
+          }, 3000);
+        } else {
+          alert('Proposal creation failed. Please try again.');
+        }
+      } catch (proposalError: any) {
+        console.error('Proposal creation error:', proposalError);
+        
+        let errorMessage = 'Proposal creation failed. Please try again.';
+        
+        if (proposalError.message?.includes('Insufficient GENOME tokens')) {
+          errorMessage = proposalError.message + '\n\nYou need at least 10,000 GENOME tokens to create a proposal.';
+        } else if (proposalError.message?.includes('User rejected')) {
+          errorMessage = 'Transaction was cancelled by user.';
+        } else if (proposalError.message?.includes('insufficient funds')) {
+          errorMessage = 'Insufficient BNB for gas fees. Please add more BNB to your wallet.';
+        } else if (proposalError.message?.includes('Internal JSON-RPC error')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        }
+        
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('Error creating proposal:', error);
