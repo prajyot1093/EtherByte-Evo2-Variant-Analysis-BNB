@@ -42,10 +42,13 @@ export default function HomePage() {
       try {
         setIsLoading(true);
         const data = await getAvailableGenomes();
+        console.log('Genome data:', data);
         if (data.genomes["Human"]) {
           setGenomes(data.genomes["Human"]);
+          console.log('Human genomes:', data.genomes["Human"]);
         }
       } catch (err) {
+        console.error('Genome fetch error:', err);
         setError("Failed to load genome data");
       } finally {
         setIsLoading(false);
@@ -237,7 +240,7 @@ export default function HomePage() {
                     </p>
                   </div>
                   <Select value={selectedGenome} onValueChange={handleGenomeChange}>
-                    <SelectTrigger className="w-48">
+                    <SelectTrigger className="w-66">
                       <SelectValue placeholder="Select genome" />
                     </SelectTrigger>
                     <SelectContent>
