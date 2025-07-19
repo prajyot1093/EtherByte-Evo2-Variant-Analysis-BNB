@@ -143,6 +143,9 @@ class BlockchainIntegration:
             tx_hash = self.w3.eth.send_raw_transaction(raw_transaction)
             
             logger.info(f"NFT minting transaction sent: {tx_hash.hex()}")
+            logger.info(f"Chain ID: {CHAIN_ID}")
+            logger.info(f"RPC URL: {BNB_TESTNET_RPC}")
+            logger.info(f"Transaction hash length: {len(tx_hash.hex())}")
             
             # Wait for confirmation (optional - can be done in background)
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)

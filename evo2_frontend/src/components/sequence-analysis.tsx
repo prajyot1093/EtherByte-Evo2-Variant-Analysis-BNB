@@ -345,18 +345,56 @@ export function SequenceAnalysisComponent() {
               <div>
                 <Label>Reward Amount</Label>
                 <div className="text-lg font-semibold text-green-600">
-                  {mintResult.reward_amount} GENOME
+                  {mintResult.reward_amount}
                 </div>
               </div>
             </div>
 
-            <Button
-              onClick={() => window.open(`https://testnet.bscscan.com/tx/${mintResult.transaction_hash}`, '_blank')}
-              variant="outline"
-              className="w-full"
-            >
-              View on BscScan
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  // Ensure transaction hash has 0x prefix
+                  const txHash = mintResult.transaction_hash.startsWith('0x') 
+                    ? mintResult.transaction_hash 
+                    : `0x${mintResult.transaction_hash}`;
+                  const url = `https://testnet.bscscan.com/tx/${txHash}`;
+                  console.log('Opening BscScan URL:', url);
+                  // Use a more reliable method to open the URL
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.target = '_blank';
+                  link.rel = 'noopener noreferrer';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                View on BscScan
+              </Button>
+              
+              <Button
+                onClick={async () => {
+                  // Ensure transaction hash has 0x prefix
+                  const txHash = mintResult.transaction_hash.startsWith('0x') 
+                    ? mintResult.transaction_hash 
+                    : `0x${mintResult.transaction_hash}`;
+                  const url = `https://testnet.bscscan.com/tx/${txHash}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    alert('BscScan link copied to clipboard!');
+                  } catch (err) {
+                    console.error('Failed to copy link:', err);
+                  }
+                }}
+                variant="outline"
+                size="sm"
+              >
+                📋
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
