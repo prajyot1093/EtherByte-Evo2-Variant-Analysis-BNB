@@ -7,6 +7,7 @@ import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { WalletConnectionHeader } from "~/components/wallet-connection-header";
+import { ClientOnly } from "~/components/client-only";
 import { ArrowLeft, FileText, Users, Clock, CheckCircle, XCircle, Plus, Vote } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
@@ -314,7 +315,9 @@ export default function DAOPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <WalletConnectionHeader />
+              <ClientOnly>
+                <WalletConnectionHeader />
+              </ClientOnly>
             </div>
           </div>
         </div>

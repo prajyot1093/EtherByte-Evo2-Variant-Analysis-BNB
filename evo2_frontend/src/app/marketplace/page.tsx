@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
 import { WalletConnectionHeader } from "~/components/wallet-connection-header";
+import { ClientOnly } from "~/components/client-only";
 import { ArrowLeft, Search, Filter, Dna, Eye, ShoppingCart, User, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
@@ -205,7 +206,9 @@ export default function MarketplacePage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <WalletConnectionHeader />
+              <ClientOnly>
+                <WalletConnectionHeader />
+              </ClientOnly>
             </div>
           </div>
         </div>

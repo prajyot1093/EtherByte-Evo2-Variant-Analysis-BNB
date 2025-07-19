@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { WalletConnectionHeader } from "../components/wallet-connection-header";
 import { SequenceAnalysisComponent } from "../components/sequence-analysis";
 import GeneViewer from "../components/gene-viewer";
+import { ClientOnly } from "../components/client-only";
 import { Dna, Search, Database, Coins, FileText } from "lucide-react";
 import Link from "next/link";
 import {
@@ -154,7 +155,9 @@ export default function HomePage() {
                     Blockchain Features
                   </Button>
                 </Link>
-                <WalletConnectionHeader />
+                <ClientOnly>
+                  <WalletConnectionHeader />
+                </ClientOnly>
               </div>
             </div>
           </div>
@@ -194,7 +197,9 @@ export default function HomePage() {
                   Blockchain Features
                 </Button>
               </Link>
-              <WalletConnectionHeader />
+              <ClientOnly>
+                <WalletConnectionHeader />
+              </ClientOnly>
             </div>
           </div>
         </div>

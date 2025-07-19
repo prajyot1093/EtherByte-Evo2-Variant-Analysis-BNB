@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { WalletConnectionHeader } from "~/components/wallet-connection-header";
 import { SequenceAnalysisComponent } from "~/components/sequence-analysis";
+import { ClientOnly } from "~/components/client-only";
 import { Coins, ArrowLeft, Dna, FileText, Database, Trophy, Users, Activity } from "lucide-react";
 import Link from "next/link";
 import { useAccount, useBalance } from "wagmi";
@@ -79,7 +80,9 @@ export default function BlockchainFeaturesPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <WalletConnectionHeader />
+              <ClientOnly>
+                <WalletConnectionHeader />
+              </ClientOnly>
             </div>
           </div>
         </div>
@@ -152,7 +155,9 @@ export default function BlockchainFeaturesPage() {
                 <p className="text-gray-600 mb-4">
                   Connect your wallet to access blockchain features, view your NFTs, and participate in governance.
                 </p>
-                <WalletConnectionHeader />
+                <ClientOnly>
+                  <WalletConnectionHeader />
+                </ClientOnly>
               </CardContent>
             </Card>
           )}
