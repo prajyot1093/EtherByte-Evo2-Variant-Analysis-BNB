@@ -67,8 +67,11 @@ contract GenomeNFT is Initializable, ERC721URIStorageUpgradeable, OwnableUpgrade
         uint256 qualityScore
     ) public whenNotPaused onlyOwner returns (uint256) {
         uint256 tokenId = nextTokenId;
+        nextTokenId++;
+        
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, tokenURI_);
+        
         genomicMetadata[tokenId] = GenomicMetadata({
             geneName: geneName,
             description: description,
@@ -77,11 +80,13 @@ contract GenomeNFT is Initializable, ERC721URIStorageUpgradeable, OwnableUpgrade
             contributor: to,
             timestamp: block.timestamp
         });
+        
         emit NFTMinted(to, tokenId, ipfsHash, qualityScore, to);
-        nextTokenId++;
 
-        // Reward logic: call $GENOME token contract to reward contributor (to be implemented)
-        // if (genomeToken != address(0)) { ... }
+        // Reward logic: call $GENOME token contract to reward contributor
+        if (genomeToken != address(0)) {
+            _rewardContributor(to, qualityScore);
+        }
 
         return tokenId;
     }
@@ -110,6 +115,42 @@ contract GenomeNFT is Initializable, ERC721URIStorageUpgradeable, OwnableUpgrade
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // Override _beforeTokenTransfer to respect pause
+    function _update(address to, uint256 tokenId, address auth) internal override whenNotPaused returns (address) {
+        return super._update(to, tokenId, auth);
+    }
+
+    // Internal function to reward contributors with $GENOME tokens
+    function _rewardContributor(address contributor, uint256 qualityScore) internal {
+        // Reward calculation: base reward + quality bonus
+        uint256 baseReward = 100 * 1e18; // 100 GENOME tokens base
+        uint256 qualityBonus = (qualityScore * 50 * 1e18) / 100; // up to 50 bonus tokens for perfect score
+        uint256 totalReward = baseReward + qualityBonus;
+        
+        // Call the GenomeToken contract to mint rewards
+        (bool success, ) = genomeToken.call(
+            abi.encodeWithSignature("mint(address,uint256)", contributor, totalReward)
+        );
+        require(success, "Reward minting failed");
+    }
+
+    // Get contributor statistics
+    function getContributorStats(address contributor) external view returns (
+        uint256 nftCount,
+        uint256 totalQualityScore,
+        uint256 averageQualityScore
+    ) {
+        uint256 count = 0;
+        uint256 totalScore = 0;
+        
+        for (uint256 i = 0; i < nextTokenId; i++) {
+            if (_ownerOf(i) != address(0) && genomicMetadata[i].contributor == contributor) {
+                count++;
+                totalScore += genomicMetadata[i].qualityScore;
+            }
+        }
+        
+        return (count, totalScore, count > 0 ? totalScore / count : 0);
+    }
 
     function tokenURI(uint256 tokenId)
         public
