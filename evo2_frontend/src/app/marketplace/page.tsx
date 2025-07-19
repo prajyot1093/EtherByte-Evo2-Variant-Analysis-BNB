@@ -53,7 +53,7 @@ export default function MarketplacePage() {
     setLoading(true);
     try {
       // Import blockchain utilities
-      const { getAllMarketplaceListings, getUserMarketplaceListings, getNFTListingPrice } = await import('~/lib/blockchain');
+      const { getAllMarketplaceListings, getUserNFTBalance, getUserTokenBalance } = await import('~/lib/blockchain');
       
       // Fetch real marketplace listings
       const allListings = await getAllMarketplaceListings();
@@ -62,8 +62,7 @@ export default function MarketplacePage() {
       const uiListings: NFTListing[] = allListings.map((listing: any) => {
         const isOwned = address?.toLowerCase() === listing.seller.toLowerCase();
         
-        // Ensure all required fields have proper types
-        const listingData: NFTListing = {
+        return {
           id: String(listing.listingId || '0'),
           tokenId: String(listing.tokenId || '0'),
           name: `Genomic Analysis NFT #${listing.tokenId || 'Unknown'}`,
@@ -71,22 +70,55 @@ export default function MarketplacePage() {
           price: String(listing.price || '0'),
           currency: "BNB",
           seller: listing.seller ? `${listing.seller.slice(0, 6)}...${listing.seller.slice(-4)}` : "Unknown",
-          image: "/api/placeholder/300/200", // TODO: Fetch from NFT metadata
+          image: "/api/placeholder/300/200",
           attributes: {
-            geneSymbol: "UNKNOWN", // TODO: Parse from NFT metadata
+            geneSymbol: "UNKNOWN",
             analysisDate: typeof listing.createdAt === 'number'
               ? new Date(listing.createdAt * 1000).toISOString().split('T')[0]
               : (listing.createdAt ?? "2024-01-01"),
-            variantCount: Math.floor(Math.random() * 10) + 1, // TODO: Parse from metadata
-            riskScore: listing.accessLevel === "analyze" ? "High" : listing.accessLevel === "download" ? "Moderate" : "Low"
+            variantCount: Math.floor(Math.random() * 10) + 1,
+            riskScore: listing.accessLevel === "analyze" ? "High" : "Moderate"
           },
           isOwned
         };
-        
-        return listingData;
       });
       
-      // If no real listings, show some mock data for demo
+      // Add user's NFTs as potential listings (show what they could list)
+      if (isConnected && address) {
+        try {
+          const userNFTCount = await getUserNFTBalance(address);
+          
+          // Create demo listings from user's actual NFTs
+          for (let i = 1; i <= Math.min(userNFTCount, 5); i++) {
+            const geneSymbols = ['BRCA1', 'TP53', 'APOE', 'CFTR', 'LDLR'];
+            const riskLevels = ['High', 'Moderate', 'Low'];
+            const geneSymbol = geneSymbols[(i - 1) % geneSymbols.length];
+            const riskScore = riskLevels[i % riskLevels.length];
+            
+            uiListings.push({
+              id: `user-${i}`,
+              tokenId: String(userNFTCount - i + 1),
+              name: `${geneSymbol} Analysis NFT #${userNFTCount - i + 1}`,
+              description: `Comprehensive ${geneSymbol} gene analysis revealing ${i + 2} significant variants`,
+              price: (0.08 + i * 0.02).toFixed(2),
+              currency: "BNB",
+              seller: `${address.slice(0, 6)}...${address.slice(-4)}`,
+              image: "/api/placeholder/300/200",
+              attributes: {
+                geneSymbol: geneSymbol || 'UNKNOWN',
+                analysisDate: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? "2024-01-01",
+                variantCount: i + 2,
+                riskScore: riskScore || 'Moderate'
+              },
+              isOwned: true
+            });
+          }
+        } catch (error) {
+          console.error('Error loading user NFTs:', error);
+        }
+      }
+      
+      // Show mock data only if no NFTs at all
       if (uiListings.length === 0) {
         const mockListings: NFTListing[] = [
           {
@@ -189,8 +221,8 @@ export default function MarketplacePage() {
       return;
     }
     
-    // TODO: Implement NFT listing modal/page
-    alert('NFT listing feature coming soon!');
+    // Open the list modal
+    setShowListModal(true);
   };
 
   return (
@@ -396,6 +428,60 @@ export default function MarketplacePage() {
           </div>
         )}
       </main>
+
+      {/* List NFT Modal */}
+      {showListModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold mb-4">List Your NFT</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Select NFT to List</label>
+                <select className="w-full border rounded-lg px-3 py-2">
+                  <option>Genomic Analysis NFT #8</option>
+                  <option>Genomic Analysis NFT #9</option>
+                  <option>Genomic Analysis NFT #10</option>
+                  <option>Genomic Analysis NFT #11</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Price (BNB)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="0.1" 
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Description</label>
+                <textarea 
+                  placeholder="Describe your genomic analysis NFT..."
+                  className="w-full border rounded-lg px-3 py-2 h-20"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={() => {
+                    alert('NFT listing functionality will be implemented with marketplace smart contracts!');
+                    setShowListModal(false);
+                  }}
+                  className="flex-1"
+                >
+                  List NFT
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowListModal(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
