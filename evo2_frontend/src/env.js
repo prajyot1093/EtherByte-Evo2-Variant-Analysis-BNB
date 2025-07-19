@@ -16,7 +16,14 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL: z.string(),
+    NEXT_PUBLIC_API_URL: z.string().default("http://localhost:8000"),
+    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: z.string().optional(),
+    NEXT_PUBLIC_CHAIN_ID: z.string().default("97"),
+    NEXT_PUBLIC_GENOME_NFT_ADDRESS: z.string().optional(),
+    NEXT_PUBLIC_GENOME_TOKEN_ADDRESS: z.string().optional(),
+    NEXT_PUBLIC_MARKETPLACE_ADDRESS: z.string().optional(),
+    NEXT_PUBLIC_DAO_ADDRESS: z.string().optional(),
+    NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL: z.string().url(),
   },
 
   /**
@@ -25,8 +32,14 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL:
-      process.env.NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+    NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID,
+    NEXT_PUBLIC_GENOME_NFT_ADDRESS: process.env.NEXT_PUBLIC_GENOME_NFT_ADDRESS,
+    NEXT_PUBLIC_GENOME_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_GENOME_TOKEN_ADDRESS,
+    NEXT_PUBLIC_MARKETPLACE_ADDRESS: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
+    NEXT_PUBLIC_DAO_ADDRESS: process.env.NEXT_PUBLIC_DAO_ADDRESS,
+    NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL: process.env.NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

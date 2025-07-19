@@ -2,10 +2,11 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Web3Providers } from "~/components/providers/web3-providers";
 
 export const metadata: Metadata = {
-  title: "Evo2 Variant Analysis",
-  description: "Evo2 Variant Analysis",
+  title: "Evo2 Variant Analysis - BNB Chain",
+  description: "AI-powered genomic analysis with NFT minting on BNB Smart Chain",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
@@ -19,7 +20,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Web3Providers>
+          {children}
+        </Web3Providers>
+      </body>
     </html>
   );
 }
