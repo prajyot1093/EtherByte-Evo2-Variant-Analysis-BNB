@@ -30,7 +30,6 @@ export const CONTRACTS = {
 // Basic ABIs for contract interactions
 export const GENOME_NFT_ABI = parseAbi([
   'function balanceOf(address owner) view returns (uint256)',
-  'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
   'function tokenURI(uint256 tokenId) view returns (string)',
   'function mint(address to, string uri) returns (uint256)',
   'function nextTokenId() view returns (uint256)',
@@ -89,6 +88,31 @@ export const getUserNFTBalance = async (address: string): Promise<number> => {
   } catch (error) {
     console.error('Error getting NFT balance:', error);
     return 0;
+  }
+};
+
+export const getUserOwnedTokenIds = async (address: string): Promise<number[]> => {
+  if (!CONTRACTS.GENOME_NFT) return [];
+  
+  try {
+    // Since your contract doesn't implement ERC721Enumerable, 
+    // we can't use tokenOfOwnerByIndex. Instead, we'll return
+    // a placeholder array based on balance for UI purposes
+    const balance = await getUserNFTBalance(address);
+    
+    // Return placeholder token IDs for UI (these are estimates)
+    // In a real implementation, you'd need to track ownership differently
+    const placeholderIds: number[] = [];
+    for (let i = 0; i < balance; i++) {
+      // Generate reasonable token IDs based on current total supply
+      const totalSupply = await getTotalNFTSupply();
+      placeholderIds.push(totalSupply - balance + i + 1);
+    }
+    
+    return placeholderIds.sort((a, b) => b - a); // Sort descending
+  } catch (error) {
+    console.error('Error getting owned token IDs:', error);
+    return [];
   }
 };
 

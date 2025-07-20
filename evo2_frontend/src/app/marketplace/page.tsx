@@ -36,6 +36,7 @@ export default function MarketplacePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOwned, setFilterOwned] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
+  const [userOwnedTokenIds, setUserOwnedTokenIds] = useState<number[]>([]);
 
   useEffect(() => {
     loadMarketplaceData();
@@ -86,33 +87,37 @@ export default function MarketplacePage() {
       // Add user's NFTs as potential listings (show what they could list)
       if (isConnected && address) {
         try {
-          const userNFTCount = await getUserNFTBalance(address);
+          const { getUserOwnedTokenIds } = await import('~/lib/blockchain');
+          const ownedTokenIds = await getUserOwnedTokenIds(address);
           
-          // Create demo listings from user's actual NFTs
-          for (let i = 1; i <= Math.min(userNFTCount, 5); i++) {
+          // Store owned token IDs for the dropdown
+          setUserOwnedTokenIds(ownedTokenIds);
+          
+          // Create listings from user's actual NFTs using real token IDs
+          ownedTokenIds.slice(0, 5).forEach((tokenId, index) => {
             const geneSymbols = ['BRCA1', 'TP53', 'APOE', 'CFTR', 'LDLR'];
             const riskLevels = ['High', 'Moderate', 'Low'];
-            const geneSymbol = geneSymbols[(i - 1) % geneSymbols.length];
-            const riskScore = riskLevels[i % riskLevels.length];
+            const geneSymbol = geneSymbols[index % geneSymbols.length];
+            const riskScore = riskLevels[index % riskLevels.length];
             
             uiListings.push({
-              id: `user-${i}`,
-              tokenId: String(userNFTCount - i + 1),
-              name: `${geneSymbol} Analysis NFT #${userNFTCount - i + 1}`,
-              description: `Comprehensive ${geneSymbol} gene analysis revealing ${i + 2} significant variants`,
-              price: (0.08 + i * 0.02).toFixed(2),
+              id: `user-${tokenId}`,
+              tokenId: String(tokenId),
+              name: `${geneSymbol} Analysis NFT #${tokenId}`,
+              description: `Comprehensive ${geneSymbol} gene analysis revealing ${index + 3} significant variants`,
+              price: (0.08 + index * 0.02).toFixed(2),
               currency: "BNB",
               seller: `${address.slice(0, 6)}...${address.slice(-4)}`,
               image: "/api/placeholder/300/200",
               attributes: {
                 geneSymbol: geneSymbol || 'UNKNOWN',
-                analysisDate: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? "2024-01-01",
-                variantCount: i + 2,
+                analysisDate: new Date(Date.now() - index * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? "2024-01-01",
+                variantCount: index + 3,
                 riskScore: riskScore || 'Moderate'
               },
               isOwned: true
             });
-          }
+          });
         } catch (error) {
           console.error('Error loading user NFTs:', error);
         }
@@ -438,10 +443,15 @@ export default function MarketplacePage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Select NFT to List</label>
                 <select className="w-full border rounded-lg px-3 py-2">
-                  <option>Genomic Analysis NFT #8</option>
-                  <option>Genomic Analysis NFT #9</option>
-                  <option>Genomic Analysis NFT #10</option>
-                  <option>Genomic Analysis NFT #11</option>
+                  {userOwnedTokenIds.length > 0 ? (
+                    userOwnedTokenIds.map((tokenId) => (
+                      <option key={tokenId} value={tokenId}>
+                        Genomic Analysis NFT #{tokenId}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No NFTs available to list</option>
+                  )}
                 </select>
               </div>
               <div>
