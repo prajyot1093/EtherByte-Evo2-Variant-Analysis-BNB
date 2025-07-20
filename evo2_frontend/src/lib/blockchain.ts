@@ -33,7 +33,7 @@ export const GENOME_NFT_ABI = parseAbi([
   'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
   'function tokenURI(uint256 tokenId) view returns (string)',
   'function mint(address to, string uri) returns (uint256)',
-  'function totalSupply() view returns (uint256)',
+  'function nextTokenId() view returns (uint256)',
   'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
 ]);
 
@@ -136,7 +136,7 @@ export const getTotalNFTSupply = async (): Promise<number> => {
     const supply = await publicClient.readContract({
       address: CONTRACTS.GENOME_NFT as `0x${string}`,
       abi: GENOME_NFT_ABI,
-      functionName: 'totalSupply'
+      functionName: 'nextTokenId'
     });
     return Number(supply);
   } catch (error) {

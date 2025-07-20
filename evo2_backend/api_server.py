@@ -361,8 +361,16 @@ async def claim_pending_rewards(request: ClaimRewardsRequest):
         # Import blockchain integration
         from blockchain import BlockchainIntegration, RewardSystem
         
-        # Initialize blockchain client
-        blockchain_client = BlockchainIntegration()
+        # Initialize blockchain client with private key from environment
+        private_key = os.getenv("PRIVATE_KEY")
+        if not private_key:
+            return {
+                "success": False,
+                "message": "No private key configured for reward distribution",
+                "total_claimed": 0
+            }
+        
+        blockchain_client = BlockchainIntegration(private_key)
         reward_system = RewardSystem(blockchain_client)
         
         # Check for pending rewards (this would typically check a database)

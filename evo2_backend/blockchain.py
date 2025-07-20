@@ -59,19 +59,13 @@ class BlockchainIntegration:
         logger.info(f"Connected to BNB Chain, latest block: {self.w3.eth.block_number}")
     
     def get_next_nonce(self):
-        """Get the next nonce for transactions, handling concurrent requests"""
+        """Get the next nonce for transactions, always fresh from network"""
         if not self.account:
             return 0
             
-        # Always get fresh nonce from network to ensure accuracy
-        current_nonce = self.w3.eth.get_transaction_count(self.account.address)
-        
-        if self._nonce is None or current_nonce > self._nonce:
-            self._nonce = current_nonce
-        else:
-            self._nonce += 1
-            
-        return self._nonce
+        # Always get fresh nonce from network to prevent conflicts
+        current_nonce = self.w3.eth.get_transaction_count(self.account.address, 'pending')
+        return current_nonce
     
     def _load_contracts(self) -> Dict[str, Any]:
         """Load contract instances with ABIs"""
@@ -104,6 +98,18 @@ class BlockchainIntegration:
                     {"indexed": True, "name": "tokenId", "type": "uint256"}
                 ],
                 "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "anonymous": False,
+                "inputs": [
+                    {"indexed": True, "name": "to", "type": "address"},
+                    {"indexed": True, "name": "tokenId", "type": "uint256"},
+                    {"indexed": False, "name": "ipfsHash", "type": "string"},
+                    {"indexed": False, "name": "qualityScore", "type": "uint256"},
+                    {"indexed": False, "name": "contributor", "type": "address"}
+                ],
+                "name": "NFTMinted",
                 "type": "event"
             }
         ]

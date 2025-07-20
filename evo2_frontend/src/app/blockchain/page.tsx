@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useAccount, useBalance } from "wagmi";
 import { formatEther } from "viem";
 
+
 export default function BlockchainFeaturesPage() {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
@@ -21,13 +22,27 @@ export default function BlockchainFeaturesPage() {
     contributions: 0,
     votingPower: 0
   });
+  const [totalNFTSupply, setTotalNFTSupply] = useState<number>(0);
 
   // Load real blockchain data
+
   useEffect(() => {
     if (isConnected && address) {
       loadUserBlockchainData();
     }
+    // Always load total NFT supply, even if not connected
+    loadTotalNFTSupply();
   }, [isConnected, address]);
+  const loadTotalNFTSupply = async () => {
+    try {
+      const { getTotalNFTSupply } = await import('~/lib/blockchain');
+      const supply = await getTotalNFTSupply();
+      setTotalNFTSupply(supply);
+    } catch (error) {
+      console.error('Error loading total NFT supply:', error);
+      setTotalNFTSupply(0);
+    }
+  };
 
   const loadUserBlockchainData = async () => {
     try {
@@ -311,7 +326,7 @@ export default function BlockchainFeaturesPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Available NFTs:</span>
-                    <Badge variant="outline">127</Badge>
+                    <Badge variant="outline">{totalNFTSupply}</Badge>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
